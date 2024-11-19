@@ -1,0 +1,6 @@
+env/
+static/
+__pycache__/
+*.ini
+*.3dmbak
+*.rhl
