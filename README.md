@@ -7,3 +7,5 @@ Barebones setup for testing web FE with GH backend
 2. Open a browser and go to http://127.0.0.1:5000/ to open the front-end UI.
 3. Open the Rhino and Grasshopper files.
 4. Move the sliders in the UI and click 'Submit' to send the inputs to the Grasshopper model and see the screenshot from Rhino in the UI.
+
+[web gh](web_gh.gif)
