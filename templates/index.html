@@ -19,18 +19,23 @@
       background-size: cover;
       background-position: center center;
     }
-    /* Menu with dashed border and light grey background */
+    /* Menu with translucent light grey background */
     .menu {
       position: fixed;
       top: 2vh;
       right: 2vh;
       width: 300px;
       max-height: 90vh;
-      background-color: #f9f9f9; /* Light wash grey */
-      border: 3px dashed #0C3A81;
+      background-color: #f9f9f9d1;
       padding: 10px;
       border-radius: 20px;
       overflow-y: auto;
+    }
+    /* Original menu content (step bar + configuration) */
+ 
+    /* Description view (hidden by default) */
+    #description-content {
+      display: none;
     }
     /* Step bar styling */
     .step-bar {
@@ -44,7 +49,7 @@
       padding: 8px 12px;
       border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, border 0.2s;
     }
     .step-bar div:hover {
       background-color: #ffe5e5;
@@ -52,6 +57,13 @@
     .step-bar .active {
       background-color: #0C3A81;
       color: #fff;
+    }
+    .step-bar .previewed {
+      border: 2px solid #0C3A81;
+    }
+    .step-bar .disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
     /* Layout section with left-aligned heading */
     .layout-section {
@@ -65,7 +77,7 @@
       margin-top: 25px;
       text-align: left;
     }
-    /* Group for sliders and preview button */
+    /* Group for sliders and preview/reset buttons */
     .sliders-box {
       border: 2px solid #0C3A81;
       padding: 20px;
@@ -81,12 +93,10 @@
     .slider-input {
       width: 100%;
       margin-bottom: 10px;
-      /* Remove default appearance */
       -webkit-appearance: none;
       appearance: none;
       background: transparent;
     }
-    /* Custom slider styling for WebKit */
     .slider-input::-webkit-slider-runnable-track {
       background: #f2cfcf;
       height: 4px;
@@ -95,12 +105,11 @@
     .slider-input::-webkit-slider-thumb {
       width: 14px;
       height: 14px;
-      background: #ffffff; /* White thumb */
+      background: #ffffff;
       border-radius: 50%;
       cursor: pointer;
       margin-top: -5px;
     }
-    /* For Firefox */
     .slider-input::-moz-range-track {
       background: #f2cfcf;
       height: 4px;
@@ -109,27 +118,27 @@
     .slider-input::-moz-range-thumb {
       width: 14px;
       height: 14px;
-      background: #ffffff; /* White thumb */
+      background: #ffffff;
       border-radius: 50%;
       cursor: pointer;
     }
-    /* Preview button (centered, transparent fill, muted red border) */
-    .preview-btn {
+    /* Buttons */
+    .preview-btn, .reset-btn {
       background-color: transparent;
       border: 2px solid #cc6666;
       color: #cc6666;
       padding: 8px 16px;
       border-radius: 20px;
       cursor: pointer;
-      display: block;
-      margin: 10px auto 0 auto;
+      display: inline-block;
       transition: background-color 0.2s;
       font-family: monospace;
+      margin-top: 20px;
     }
-    .preview-btn:hover {
+    .preview-btn:hover, .reset-btn:hover {
       background-color: #ffe5e5;
     }
-    /* Navigation buttons: Next above Previous, both transparent */
+    /* Navigation buttons for page navigation and for view switching */
     .nav-buttons {
       display: flex;
       flex-direction: column;
@@ -137,7 +146,6 @@
       margin-bottom: 5px;
     }
     .nav-buttons button {
-      /* type="button" to prevent accidental form submission */
       background-color: transparent;
       border-radius: 20px;
       cursor: pointer;
@@ -165,39 +173,58 @@
   <!-- Main background area -->
   <div id="main"></div>
   
-  <!-- Menu (right side) -->
+  <!-- Menu Container -->
   <div class="menu">
-    <!-- Step bar: clicking a step posts room data -->
-    <div class="step-bar">
-      <div class="step-btn active" data-step="1">1</div>
-      <div class="step-btn" data-step="2">2</div>
-      <div class="step-btn" data-step="3">3</div>
-      <div class="step-btn" data-step="4">4</div>
-      <div class="step-btn" data-step="5">5</div>
-      <div class="step-btn" data-step="6">6</div>
-      <div class="step-btn" data-step="Store">Store</div>
-    </div>
-    
-    <!-- Layout section: grouped sliders & centered Preview button for configuration -->
-    <div class="layout-section">
-      <p>Layout</p>
-      <div class="sliders-box">
-        <label class="slider-label" for="config_x_range">
-          Corridor Width: <span id="config_x_value">1</span> ft
-        </label>
-        <input class="slider-input" type="range" min="1" max="3" value="1" step="0.1" name="config_x_range" id="config_x_range">
-        <br><br>
-        <label class="slider-label" for="config_y_range">
-          Rack Width: <span id="config_y_value">1</span> ft
-        </label>
-        <input class="slider-input" type="range" min="1" max="3" value="1" step="0.1" name="config_y_range" id="config_y_range">
-        <button type="button" class="preview-btn">Preview</button>
+    <!-- Original Menu Content -->
+    <div id="menu-content">
+      <!-- Step Bar: Steps 1-6 and a Store button -->
+      <div class="step-bar">
+        <div class="step-btn" data-step="1">1</div>
+        <div class="step-btn" data-step="2">2</div>
+        <div class="step-btn" data-step="3">3</div>
+        <div class="step-btn" data-step="4">4</div>
+        <div class="step-btn" data-step="5">5</div>
+        <div class="step-btn" data-step="6">6</div>
+        <!-- The Store button starts off disabled -->
+        <div class="step-btn disabled" data-step="Store">Store</div>
+      </div>
+      
+      <!-- Layout Section for Configuration -->
+      <div class="layout-section">
+        <p>Layout</p>
+        <div class="sliders-box">
+          <label class="slider-label" for="config_x_range">
+            Corridor Width: <span id="config_x_value">0</span> ft
+          </label>
+          <!-- Sliders: min=0, max=3, default=0 -->
+          <input class="slider-input" type="range" min="0" max="3" value="0" step="0.1" name="config_x_range" id="config_x_range">
+          <br><br>
+          <label class="slider-label" for="config_y_range">
+            Rack Width: <span id="config_y_value">0</span> ft
+          </label>
+          <input class="slider-input" type="range" min="0" max="3" value="0" step="0.1" name="config_y_range" id="config_y_range">
+          <!-- Preview and Reset buttons -->
+          <button type="button" class="preview-btn">Preview</button>
+          <button type="button" class="reset-btn">Reset</button>
+        </div>
       </div>
     </div>
     
-    <!-- Navigation buttons: Next and Previous navigate pages -->
+    <!-- Description View (hidden by default) -->
+    <div id="description-content">
+      <p style="font-size:1.5em; font-weight:bold; margin-bottom:10px;">Description</p>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
+    </div>
+    
+    <!-- Navigation Buttons for Switching Views and Page Navigation -->
     <div class="nav-buttons">
+      <!-- In description view, the Next button becomes "Submit" -->
       <button type="button" class="next-button">Next</button>
+      <!-- In description view, the Prev button becomes "Back" -->
       <button type="button" class="prev-button">Previous</button>
     </div>
   </div>
@@ -205,10 +232,9 @@
   <script>
     window.onload = function() {
       const main = document.getElementById("main");
-      // Declare image_path once (this may come from your server template)
       let image_path = '{{ image_path }}';
       
-      // Set the initial background image
+      // Set initial background image
       if (!image_path || image_path === 'None') {
         main.style.background = 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)';
       } else {
@@ -216,7 +242,7 @@
         main.style.backgroundImage = `url('${image_path}?t=${timestamp}')`;
       }
       
-      // Function to update the background image with a cache-busting parameter
+      // Function to update background image (cache busting)
       function updateBackgroundImage() {
         const timestamp = new Date().getTime();
         main.style.backgroundImage = `url('${image_path}?t=${timestamp}')`;
@@ -228,7 +254,6 @@
       const configXValueDisplay = document.getElementById("config_x_value");
       const configYValueDisplay = document.getElementById("config_y_value");
       
-      // Update slider display values as sliders move
       configXSlider.addEventListener("input", () => {
         configXValueDisplay.textContent = parseFloat(configXSlider.value).toFixed(1);
       });
@@ -236,7 +261,7 @@
         configYValueDisplay.textContent = parseFloat(configYSlider.value).toFixed(1);
       });
       
-      // Helper function: send POST (always returns a promise)
+      // Helper function: send POST and return a promise
       function postData(data) {
         const formData = new URLSearchParams(data);
         return fetch('/', {
@@ -255,61 +280,161 @@
         });
       }
       
-      // Step bar: clicking a step posts room data (simulate the room form)
+      // Track which steps (1-6) have been previewed
+      let previewedSteps = {1: false, 2: false, 3: false, 4: false, 5: false, 6: false};
+      function allStepsPreviewed() {
+        return Object.values(previewedSteps).every(val => val === true);
+      }
+      
+      // Get step buttons and the Store button (data-step="Store")
       const stepButtons = document.querySelectorAll('.step-btn');
-        stepButtons.forEach(btn => {
+      const storeButton = document.querySelector('.step-btn[data-step="Store"]');
+      
+      // Set initial active step to step 1
+      stepButtons.forEach(btn => btn.classList.remove('active'));
+      let initialStep = document.querySelector('.step-btn[data-step="1"]');
+      if (initialStep) {
+        initialStep.classList.add('active');
+      }
+      
+      // Original view container and description view container
+      const menuContent = document.getElementById("menu-content");
+      const descriptionContent = document.getElementById("description-content");
+      
+      // Step Bar: clicking a step (steps 1-6) posts room data.
+      // The Store button is handled separately.
+      stepButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            e.preventDefault();
+          e.preventDefault();
+          const step = btn.getAttribute('data-step');
+          if (step === "Store") {
+            // Only allow clicking Store if enabled (i.e., all steps previewed)
+            if (!storeButton.classList.contains('enabled')) {
+              alert("Please preview all steps (1-6) before storing.");
+              return;
+            } else {
+              // Switch view: hide original menu content and show description view
+              menuContent.style.display = 'none';
+              descriptionContent.style.display = 'block';
+              // Change navigation button texts: Next becomes "Submit", Prev becomes "Back"
+              document.querySelector('.next-button').textContent = 'Submit';
+              document.querySelector('.prev-button').textContent = 'Back';
+              return;
+            }
+          } else {
+            // For steps 1-6: update active class and post room data for UI feedback.
             stepButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const roomValue = btn.getAttribute('data-step');
-            console.log("Posting room data:", { room_x_range: roomValue, data_type: 'room' });
-            postData({ room_x_range: roomValue, data_type: 'room' })
-            .then(responseText => {
+            postData({ room_x_range: step, data_type: 'room' })
+              .then(responseText => {
                 console.log("Room data saved. Server responded:", responseText);
-            })
-            .catch(error => console.error("Error posting room data:", error));
+              })
+              .catch(error => console.error("Error posting room data:", error));
+          }
         });
-        });
-      
-      // Navigation buttons: these now navigate to different pages
-      const nextButton = document.querySelector('.next-button');
-      const prevButton = document.querySelector('.prev-button');
-      
-      nextButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        // Navigate to the next page (adjust URL as needed)
-        window.location.href = '/next';
       });
       
-      prevButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        // Navigate to the previous page (adjust URL as needed)
-        window.location.href = '/prev';
-      });
-      
-      // Preview button: posts configuration data and then updates the background image
+      // Preview button: posts configuration data, updates background, and marks active step as previewed.
       const previewButton = document.querySelector('.preview-btn');
       previewButton.addEventListener('click', (e) => {
         e.preventDefault();
         let corridorWidth = configXSlider.value;
         let rackWidth = configYSlider.value;
-        
         // Update display values
-        configXSlider.value = corridorWidth;
         configXValueDisplay.textContent = parseFloat(corridorWidth).toFixed(1);
-        configYSlider.value = rackWidth;
         configYValueDisplay.textContent = parseFloat(rackWidth).toFixed(1);
-        
-        // Post config data and then update background image
-        postData({ config_x_range: corridorWidth, config_y_range: rackWidth })
+        // Get active room number from step bar
+        const activeBtn = document.querySelector('.step-btn.active');
+        const activeStep = activeBtn.getAttribute('data-step');
+        // Post configuration data including room number
+        postData({
+          room_x_range: activeStep,
+          config_x_range: corridorWidth,
+          config_y_range: rackWidth,
+          data_type: 'config'
+        })
           .then(() => {
             updateBackgroundImage();
+            if (activeStep !== "Store" && previewedSteps.hasOwnProperty(activeStep)) {
+              previewedSteps[activeStep] = true;
+              activeBtn.classList.add('previewed');
+            }
+            // Enable Store button if all steps 1-6 are previewed
+            if (allStepsPreviewed()) {
+              storeButton.classList.remove('disabled');
+              storeButton.classList.add('enabled');
+              storeButton.style.pointerEvents = 'auto';
+              storeButton.style.border = '2px solid #0C3A81';
+            }
           })
           .catch(error => console.error("Error posting config data:", error));
       });
       
-      // Load previous form data if available (to restore slider values and active step)
+      // Reset button: sets sliders to 0 and posts zeros
+      const resetButton = document.querySelector('.reset-btn');
+      resetButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        configXSlider.value = 0;
+        configYSlider.value = 0;
+        configXValueDisplay.textContent = "0.0";
+        configYValueDisplay.textContent = "0.0";
+        const activeStep = document.querySelector('.step-btn.active').getAttribute('data-step');
+        postData({
+          room_x_range: activeStep,
+          config_x_range: 0,
+          config_y_range: 0,
+          data_type: 'config'
+        })
+          .then(() => {
+            updateBackgroundImage();
+            let activeBtn = document.querySelector('.step-btn.active');
+            activeBtn.classList.remove('previewed');
+            previewedSteps[activeStep] = false;
+            if (!allStepsPreviewed()) {
+              storeButton.classList.add('disabled');
+              storeButton.classList.remove('enabled');
+              storeButton.style.pointerEvents = 'none';
+              storeButton.style.border = '2px solid #ccc';
+            }
+          })
+          .catch(error => console.error("Error posting reset data:", error));
+      });
+      
+      // Navigation buttons for page navigation / view switching
+      const nextButton = document.querySelector('.next-button');
+      const prevButton = document.querySelector('.prev-button');
+      
+      // In description view, Next (Submit) button action
+      nextButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        // If description view is visible, treat Next as "Submit"
+        if (descriptionContent.style.display === 'block') {
+          // Here you can perform final submission logic if needed.
+          alert("Submitting final configuration..."); 
+          // For example, navigate to a final page:
+          window.location.href = '/store';
+        } else {
+          // Otherwise, navigate as usual (if used for page navigation)
+          window.location.href = '/index';
+        }
+      });
+      
+      // In description view, Prev (Back) button returns to original menu content.
+      prevButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (descriptionContent.style.display === 'block') {
+          // Switch back to original menu view
+          descriptionContent.style.display = 'none';
+          menuContent.style.display = 'block';
+          // Restore original navigation button texts if needed
+          nextButton.textContent = 'Next Room';
+          prevButton.textContent = 'Previous Room';
+        } else {
+          window.location.href = '/prev';
+        }
+      });
+      
+      // (Optional) Load previous form data if available (to restore slider values and active step)
       try {
         let form_data = JSON.parse('{{ form_data | tojson }}');
         if (form_data) {
