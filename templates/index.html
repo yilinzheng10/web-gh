@@ -31,9 +31,10 @@
       border-radius: 20px;
       overflow-y: auto;
     }
-    /* Original menu content (step bar + configuration) */
- 
-    /* Description view (hidden by default) */
+    /* Containers for views */
+    #menu-content, #description-content {
+      transition: all 0.3s ease;
+    }
     #description-content {
       display: none;
     }
@@ -138,7 +139,14 @@
     .preview-btn:hover, .reset-btn:hover {
       background-color: #ffe5e5;
     }
-    /* Navigation buttons for page navigation and for view switching */
+    /* Description view styling */
+    #description-content p {
+      font-size: 1em;
+      line-height: 1.4em;
+      text-align: justify;
+      margin-bottom: 10px;
+    }
+    /* Navigation buttons for view switching */
     .nav-buttons {
       display: flex;
       flex-direction: column;
@@ -184,7 +192,6 @@
         <div class="step-btn" data-step="3">3</div>
         <div class="step-btn" data-step="4">4</div>
         <div class="step-btn" data-step="5">5</div>
-        <div class="step-btn" data-step="6">6</div>
         <!-- The Store button starts off disabled -->
         <div class="step-btn disabled" data-step="Store">Store</div>
       </div>
@@ -196,7 +203,6 @@
           <label class="slider-label" for="config_x_range">
             Corridor Width: <span id="config_x_value">0</span> ft
           </label>
-          <!-- Sliders: min=0, max=3, default=0 -->
           <input class="slider-input" type="range" min="0" max="3" value="0" step="0.1" name="config_x_range" id="config_x_range">
           <br><br>
           <label class="slider-label" for="config_y_range">
@@ -212,27 +218,28 @@
     
     <!-- Description View (hidden by default) -->
     <div id="description-content">
-      <p style="font-size:1.5em; font-weight:bold; margin-bottom:10px;">Description</p>
+      <p style="font-size:1.5em; font-weight:bold; margin-bottom:10px;">Long Description</p>
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        <strong>✅ Revenue per Square Foot</strong> <br> Strategic placement of pickup and café near high-traffic entry points boosts impulse purchases, increasing revenue to $500+ per sq. ft. in a high-density area like Times Square.<br>
+
+        <strong>✅ Average Order Value (AOV)</strong> <br> A well-structured flow from grocery to household and refrigeration sections encourages cross-category purchases, raising AOV to $15-$20 per transaction. <br>
+
+        <strong>✅ Customer Flow & Dwell Time Optimization</strong> <br> Efficient zoning ensures quick service at pickup and café, while grocery and household sections retain customers longer, keeping dwell time within 2-5 minutes for efficiency.
       </p>
     </div>
     
-    <!-- Navigation Buttons for Switching Views and Page Navigation -->
+    <!-- Navigation Buttons -->
     <div class="nav-buttons">
-      <!-- In description view, the Next button becomes "Submit" -->
-      <button type="button" class="next-button">Next</button>
-      <!-- In description view, the Prev button becomes "Back" -->
-      <button type="button" class="prev-button">Previous</button>
+      <!-- In configuration view, Next/Prev navigate room steps -->
+      <button type="button" class="next-button">Next Room</button>
+      <button type="button" class="prev-button">Previous Room</button>
     </div>
   </div>
   
   <script>
     window.onload = function() {
       const main = document.getElementById("main");
-      let image_path = '{{ image_path }}';
+      let image_path = '{{ url_for("static", filename="screenshot.jpg") }}';
       
       // Set initial background image
       if (!image_path || image_path === 'None') {
@@ -281,7 +288,7 @@
       }
       
       // Track which steps (1-6) have been previewed
-      let previewedSteps = {1: false, 2: false, 3: false, 4: false, 5: false, 6: false};
+      let previewedSteps = {1: false, 2: false, 3: false, 4: false, 5: false};
       function allStepsPreviewed() {
         return Object.values(previewedSteps).every(val => val === true);
       }
@@ -297,7 +304,7 @@
         initialStep.classList.add('active');
       }
       
-      // Original view container and description view container
+      // Containers for view switching
       const menuContent = document.getElementById("menu-content");
       const descriptionContent = document.getElementById("description-content");
       
@@ -313,7 +320,7 @@
               alert("Please preview all steps (1-6) before storing.");
               return;
             } else {
-              // Switch view: hide original menu content and show description view
+              // Switch to description view
               menuContent.style.display = 'none';
               descriptionContent.style.display = 'block';
               // Change navigation button texts: Next becomes "Submit", Prev becomes "Back"
@@ -322,7 +329,7 @@
               return;
             }
           } else {
-            // For steps 1-6: update active class and post room data for UI feedback.
+            // For steps 1-6: update active class and post room data.
             stepButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             postData({ room_x_range: step, data_type: 'room' })
@@ -340,13 +347,10 @@
         e.preventDefault();
         let corridorWidth = configXSlider.value;
         let rackWidth = configYSlider.value;
-        // Update display values
         configXValueDisplay.textContent = parseFloat(corridorWidth).toFixed(1);
         configYValueDisplay.textContent = parseFloat(rackWidth).toFixed(1);
-        // Get active room number from step bar
         const activeBtn = document.querySelector('.step-btn.active');
         const activeStep = activeBtn.getAttribute('data-step');
-        // Post configuration data including room number
         postData({
           room_x_range: activeStep,
           config_x_range: corridorWidth,
@@ -359,7 +363,6 @@
               previewedSteps[activeStep] = true;
               activeBtn.classList.add('previewed');
             }
-            // Enable Store button if all steps 1-6 are previewed
             if (allStepsPreviewed()) {
               storeButton.classList.remove('disabled');
               storeButton.classList.add('enabled');
@@ -370,7 +373,7 @@
           .catch(error => console.error("Error posting config data:", error));
       });
       
-      // Reset button: sets sliders to 0 and posts zeros
+      // Reset button: sets sliders to 0 and posts zeros.
       const resetButton = document.querySelector('.reset-btn');
       resetButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -400,41 +403,70 @@
           .catch(error => console.error("Error posting reset data:", error));
       });
       
-      // Navigation buttons for page navigation / view switching
+      // Navigation buttons: behavior depends on view.
       const nextButton = document.querySelector('.next-button');
       const prevButton = document.querySelector('.prev-button');
       
-      // In description view, Next (Submit) button action
       nextButton.addEventListener('click', (e) => {
         e.preventDefault();
-        // If description view is visible, treat Next as "Submit"
         if (descriptionContent.style.display === 'block') {
-          // Here you can perform final submission logic if needed.
-          alert("Submitting final configuration..."); 
-          // For example, navigate to a final page:
-          window.location.href = '/store';
+          // In description view, Next acts as Submit (final submission)
+          alert("Submitting final configuration...");
+          window.location.href = '/store'; // Submit page landing
         } else {
-          // Otherwise, navigate as usual (if used for page navigation)
-          window.location.href = '/index';
+          // In configuration view, Next navigates to the next room step.
+          const activeBtn = document.querySelector('.step-btn.active');
+          let currentRoom = parseInt(activeBtn.getAttribute('data-step'));
+          if (isNaN(currentRoom)) {
+            alert("Invalid room number.");
+            return;
+          }
+          if (currentRoom < 6) {
+            let nextRoom = (currentRoom + 1).toString();
+            stepButtons.forEach(b => b.classList.remove('active'));
+            let nextBtn = document.querySelector(`.step-btn[data-step="${nextRoom}"]`);
+            if (nextBtn) {
+              nextBtn.classList.add('active');
+              // Optionally, post the room data for the new step
+              postData({ room_x_range: nextRoom, data_type: 'room' });
+            }
+          } else {
+            alert("This is the last room step.");
+          }
         }
       });
       
-      // In description view, Prev (Back) button returns to original menu content.
       prevButton.addEventListener('click', (e) => {
         e.preventDefault();
         if (descriptionContent.style.display === 'block') {
-          // Switch back to original menu view
+          // In description view, Prev acts as Back to configuration view.
           descriptionContent.style.display = 'none';
           menuContent.style.display = 'block';
-          // Restore original navigation button texts if needed
           nextButton.textContent = 'Next Room';
           prevButton.textContent = 'Previous Room';
         } else {
-          window.location.href = '/prev';
+          // In configuration view, Prev navigates to the previous room step.
+          const activeBtn = document.querySelector('.step-btn.active');
+          let currentRoom = parseInt(activeBtn.getAttribute('data-step'));
+          if (isNaN(currentRoom)) {
+            alert("Invalid room number.");
+            return;
+          }
+          if (currentRoom > 1) {
+            let prevRoom = (currentRoom - 1).toString();
+            stepButtons.forEach(b => b.classList.remove('active'));
+            let prevBtn = document.querySelector(`.step-btn[data-step="${prevRoom}"]`);
+            if (prevBtn) {
+              prevBtn.classList.add('active');
+              postData({ room_x_range: prevRoom, data_type: 'room' });
+            }
+          } else {
+            alert("This is the first room step.");
+          }
         }
       });
       
-      // (Optional) Load previous form data if available (to restore slider values and active step)
+      // (Optional) Load previous form data if available to restore slider values and active step.
       try {
         let form_data = JSON.parse('{{ form_data | tojson }}');
         if (form_data) {
